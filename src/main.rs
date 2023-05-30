@@ -1,13 +1,11 @@
 mod cli;
 
-use craft::{had_error, run, run_file, run_prompt, EmpResult};
+use craft::{run_file, run_prompt, EmpResult, HAD_ERROR};
 use home::home_dir;
 use log::*;
 use simplelog::*;
 use std::{
-    error::Error,
     fs::{self, File},
-    path::PathBuf,
     sync::atomic::Ordering,
 };
 
@@ -45,7 +43,6 @@ fn init_logging() -> EmpResult {
 fn main() -> EmpResult {
     init_logging()?;
     let args = cli::parse_args();
-    println!("Running {:?}", args.file);
 
     match args.file {
         Some(path) => run_file(path),
@@ -53,7 +50,7 @@ fn main() -> EmpResult {
     }
     .expect("Failed to run interpreter");
 
-    if had_error.load(Ordering::SeqCst) {
+    if HAD_ERROR.load(Ordering::SeqCst) {
         Err("Encountered error(s) while running")?
     }
 

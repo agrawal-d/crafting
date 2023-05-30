@@ -1,3 +1,5 @@
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone)]
 pub enum TokenType {
     // Single-character tokens.
     LEFT_PAREN,
@@ -23,9 +25,9 @@ pub enum TokenType {
     LESS_EQUAL,
 
     // Literals.
-    IDENTIFIER,
-    STRING,
-    NUMBER,
+    IDENTIFIER(String),
+    STRING(String),
+    NUMBER(f64),
 
     // Keywords.
     AND,

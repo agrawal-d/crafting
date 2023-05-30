@@ -1,18 +1,23 @@
+#[macro_use]
+extern crate lazy_static;
+
+pub mod scanner;
 pub mod token;
 pub mod token_type;
 
 use log::*;
+use scanner::Scanner;
+use std::io::{stdout, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{
-    error::Error,
-    fs::{self, File},
+    fs::{self},
     path::PathBuf,
 };
 pub type EmpResult = Result<(), Box<dyn std::error::Error>>;
-
-pub static had_error: AtomicBool = AtomicBool::new(false);
+pub static HAD_ERROR: AtomicBool = AtomicBool::new(false);
 
 pub fn error(line: usize, message: &str) {
+    HAD_ERROR.store(true, Ordering::SeqCst);
     report(line, "", message);
 }
 
@@ -21,13 +26,16 @@ fn report(line: usize, loc: &str, message: &str) {
 }
 
 pub fn run_file(path: PathBuf) -> EmpResult {
+    println!("Running {:?}", path);
     let contents = fs::read_to_string(path)?;
-    run(&contents);
-    Ok(())
+    run(&contents)
 }
 
 pub fn run_prompt() -> EmpResult {
+    println!("REPL mode: Type code to run");
     loop {
+        print!("> ");
+        stdout().flush().unwrap();
         let mut input = String::new();
         std::io::stdin().read_line(&mut input)?;
         let input = input.trim();
@@ -36,17 +44,19 @@ pub fn run_prompt() -> EmpResult {
             return Ok(());
         }
 
-        run(input);
+        if let Err(err) = run(input) {
+            error!("Error while running code: {:?}", err);
+        }
     }
 }
 
 pub fn run(source: &str) -> EmpResult {
-    // let scanner = Scanner::new(source);
-    // tokens = scanner.scan_tokens();
+    let mut scanner = Scanner::new(source.to_string());
+    let tokens = scanner.scan_tokens();
 
-    // for token in tokens {
-    //     println!("{token:?}");
-    // }
+    for token in tokens {
+        println!("{token}");
+    }
 
     Ok(())
 }
