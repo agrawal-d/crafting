@@ -3,6 +3,7 @@ extern crate lazy_static;
 
 pub mod ast;
 pub mod ast_printer;
+pub mod parser;
 pub mod scanner;
 pub mod token;
 pub mod token_type;
@@ -15,6 +16,7 @@ use std::{
     fs::{self},
     path::PathBuf,
 };
+
 pub type EmpResult = Result<(), Box<dyn std::error::Error>>;
 pub static HAD_ERROR: AtomicBool = AtomicBool::new(false);
 
