@@ -1,12 +1,12 @@
 use std::fmt::Display;
 
-use crate::token_type::TokenType;
+pub use crate::token_type::TokenType;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Token {
-    variant: TokenType,
-    lexeme: String,
-    line: usize,
+    pub variant: TokenType,
+    pub lexeme: String,
+    pub line: usize,
 }
 
 impl Token {

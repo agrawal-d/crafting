@@ -205,7 +205,8 @@ impl Scanner {
 
         let text = self.source[self.start..self.current].to_string();
         let token_type = KEYWORDS
-            .get(&text).cloned()
+            .get(&text)
+            .cloned()
             .unwrap_or(TokenType::IDENTIFIER(text));
 
         self.add_token(token_type);
