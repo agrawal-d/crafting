@@ -120,17 +120,23 @@ impl Scanner {
     }
 
     fn advance(&mut self) -> char {
-        let value = self.source.chars().nth(self.current).unwrap();
-        self.current += 1;
-        value
+        let value = self.source.chars().nth(self.current);
+
+        if let Some(c) = value {
+            self.current += 1;
+            return c;
+        } else {
+            panic!(
+                "Currenly at {} (char {}), length is {}, tried to advance",
+                self.current,
+                self.source.chars().nth(self.current).unwrap_or('\0'),
+                self.source.len()
+            );
+        }
     }
 
     fn peek(&self) -> char {
-        if self.is_at_end() {
-            return '\0';
-        }
-
-        self.source.chars().nth(self.current).unwrap()
+        self.source.chars().nth(self.current).unwrap_or('\0')
     }
 
     fn peek2(&self) -> char {
@@ -166,8 +172,11 @@ impl Scanner {
             self.advance();
         }
 
-        if self.is_at_end() {
-            error(self.line, "Unterminated string literal")
+        println!("peek: {}", self.peek());
+
+        if self.is_at_end() || self.peek() != '"' {
+            error(self.line, "Unterminated string literal");
+            return;
         }
 
         self.advance(); // The closing ".
