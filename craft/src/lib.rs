@@ -9,6 +9,7 @@ pub mod token;
 pub mod token_type;
 
 use log::*;
+use parser::Parser;
 use scanner::Scanner;
 use std::io::{stdout, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -17,7 +18,10 @@ use std::{
     path::PathBuf,
 };
 
+use crate::ast_printer::print_expr;
+
 pub type EmpResult = Result<(), Box<dyn std::error::Error>>;
+pub type Eer = Result<(), ()>;
 pub static HAD_ERROR: AtomicBool = AtomicBool::new(false);
 
 pub fn error(line: usize, message: &str) {
@@ -58,9 +62,15 @@ pub fn run(source: &str) -> EmpResult {
     let mut scanner = Scanner::new(source.to_string());
     let tokens = scanner.scan_tokens();
 
-    for token in tokens {
+    for token in &tokens {
         println!("{token}");
     }
+
+    let mut parser = Parser::new(tokens);
+    let expr = parser
+        .parse()
+        .map_err(|()| Box::<dyn std::error::Error>::from("Error during parsing"))?;
+    println!("{}", print_expr(expr));
 
     Ok(())
 }

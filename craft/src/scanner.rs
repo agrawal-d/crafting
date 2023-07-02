@@ -70,6 +70,7 @@ impl Scanner {
             '-' => self.add_token(TokenType::MINUS),
             '+' => self.add_token(TokenType::PLUS),
             ';' => self.add_token(TokenType::SEMICOLON),
+            '/' => self.add_token(TokenType::SLASH),
             '*' => self.add_token(TokenType::STAR),
             '!' => {
                 if self.check_and_use_next('=') {

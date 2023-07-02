@@ -1,8 +1,9 @@
-use crate::ast::*;
+use crate::ast_printer::print_expr;
 use crate::token::{Token, TokenType};
+use crate::{ast::*, Eer};
 
 /// Parser converts a sequence of tokens produced by the scanner / lexer into a syntax tree (AST).
-struct Parser {
+pub struct Parser {
     tokens: Vec<Token>,
     current: usize,
 }
@@ -10,6 +11,11 @@ struct Parser {
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
         Self { tokens, current: 0 }
+    }
+
+    pub fn parse(&mut self) -> Result<Expr, ()> {
+        let expr: Expr = self.expression();
+        Ok(expr)
     }
 
     fn expression(&mut self) -> Expr {
@@ -81,50 +87,82 @@ impl Parser {
 
     fn primary(&mut self) -> Expr {
         let token = self.peek().clone();
+        let mut status: Eer = Ok(());
+        let mut expr: Expr;
 
         match &token.variant {
             TokenType::FALSE => {
                 self.advance();
-                return Expr::Literal(Box::new(Literal::new(Object::Boolean(false))));
+                expr = Expr::Literal(Box::new(Literal::new(Object::Boolean(false))));
             }
             TokenType::TRUE => {
                 self.advance();
-                return Expr::Literal(Box::new(Literal::new(Object::Boolean(true))));
+                expr = Expr::Literal(Box::new(Literal::new(Object::Boolean(true))));
             }
             TokenType::NIL => {
                 self.advance();
-                return Expr::Literal(Box::new(Literal::new(Object::Nil)));
+                expr = Expr::Literal(Box::new(Literal::new(Object::Nil)));
             }
             TokenType::NUMBER(num) => {
                 self.advance();
-                return Expr::Literal(Box::new(Literal::new(Object::Number(*num))));
+                expr = Expr::Literal(Box::new(Literal::new(Object::Number(*num))));
             }
             TokenType::STRING(str) => {
                 self.advance();
-                return Expr::Literal(Box::new(Literal::new(Object::String(str.clone()))));
+                expr = Expr::Literal(Box::new(Literal::new(Object::String(str.clone()))));
             }
             TokenType::LEFT_PAREN => {
                 self.advance();
-                let expr: Expr = self.expression();
-                self.consume(
+                expr = self.expression();
+                status = self.consume(
                     TokenType::RIGHT_PAREN,
                     "Expected ')' after expression, to match '('",
                 );
-                return Expr::Grouping(Box::new(Grouping::new(expr)));
+                expr = Expr::Grouping(Box::new(Grouping::new(expr)));
             }
             _ => {
                 panic!("Unexpected token: {:?}", token);
             }
+        };
+
+        if status.is_err() {
+            self.synchronize();
+        }
+
+        expr
+    }
+
+    fn synchronize(&mut self) {
+        self.advance();
+
+        while !self.is_at_end() {
+            if self.previous().variant == TokenType::SEMICOLON {
+                return;
+            }
+
+            match self.peek().variant {
+                TokenType::CLASS
+                | TokenType::FUN
+                | TokenType::VAR
+                | TokenType::FOR
+                | TokenType::IF
+                | TokenType::WHILE
+                | TokenType::PRINT
+                | TokenType::RETURN => return,
+                _ => (),
+            }
+
+            self.advance();
         }
     }
 
-    fn consume(&mut self, token_type: TokenType, message: &str) {
+    fn consume(&mut self, token_type: TokenType, message: &str) -> Eer {
         if self.check(token_type) {
             self.advance();
-            return;
+            return Ok(());
         }
 
-        panic!("{}", message);
+        self.error(self.peek().clone(), message)
     }
 
     fn match_token(&mut self, vec: Vec<TokenType>) -> bool {
@@ -162,5 +200,10 @@ impl Parser {
         if !self.is_at_end() {
             self.current += 1;
         }
+    }
+
+    fn error(&self, token: Token, message: &str) -> Eer {
+        crate::error(token.line, message);
+        Err(())
     }
 }
