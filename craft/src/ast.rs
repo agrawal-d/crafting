@@ -48,7 +48,23 @@ pub trait Visitor<T> {
     fn visit_unary_expr(&mut self, expr: &Unary) -> T;
 }
 
+pub trait StmtVisitor<T> {
+    fn visit_stmt(&mut self, stmt: &Stmt) -> T;
+    fn visit_expression_stmt(&mut self, stmt: &Expression) -> T;
+    fn visit_print_stmt(&mut self, stmt: &Print) -> T;
+}
+
 generate_node!(Binary, left: Expr, operator: Token, right: Expr);
 generate_node!(Grouping, expression: Expr);
 generate_node!(Literal, value: Object);
 generate_node!(Unary, operator: Token, right: Expr);
+
+#[derive(Debug, Clone)]
+pub enum Stmt {
+    Expression(Box<Expression>),
+    Print(Box<Print>),
+    Empty,
+}
+
+generate_node!(Expression, expr: Expr);
+generate_node!(Print, expr: Expr);

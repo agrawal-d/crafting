@@ -1,5 +1,7 @@
+use std::sync::atomic::Ordering;
+
 use crate::token::{Token, TokenType};
-use crate::{ast::*, Eer};
+use crate::{ast::*, Eer, HAD_ERROR};
 
 /// Parser converts a sequence of tokens produced by the scanner / lexer into a syntax tree (AST).
 pub struct Parser {
@@ -12,9 +14,46 @@ impl Parser {
         Self { tokens, current: 0 }
     }
 
-    pub fn parse(&mut self) -> Result<Expr, ()> {
-        let expr: Expr = self.expression();
-        Ok(expr)
+    pub fn parse(&mut self) -> Vec<Stmt> {
+        let mut statements = Vec::new();
+        while !self.is_at_end() {
+            statements.push(self.statement());
+        }
+
+        return statements;
+    }
+
+    fn statement(&mut self) -> Stmt {
+        match self.peek().variant {
+            TokenType::PRINT => self.print_statement(),
+            TokenType::EOF => {
+                self.advance();
+                Stmt::Empty
+            }
+            _ => self.expression_statement(),
+        }
+    }
+
+    fn print_statement(&mut self) -> Stmt {
+        self.advance();
+        let value = self.expression();
+        let result = self.consume(TokenType::SEMICOLON, "Expect ';' after expression.");
+
+        if result.is_err() {
+            self.synchronize();
+        }
+        return Stmt::Print(Box::new(Print::new(value)));
+    }
+
+    fn expression_statement(&mut self) -> Stmt {
+        let expr = self.expression();
+        let result = self.consume(TokenType::SEMICOLON, "Expect ';' after expression.");
+
+        if result.is_err() {
+            self.synchronize();
+        }
+
+        return Stmt::Expression(Box::new(Expression::new(expr)));
     }
 
     fn expression(&mut self) -> Expr {
@@ -132,8 +171,8 @@ impl Parser {
     }
 
     fn synchronize(&mut self) {
+        HAD_ERROR.store(true, Ordering::SeqCst);
         self.advance();
-
         while !self.is_at_end() {
             if self.previous().variant == TokenType::SEMICOLON {
                 return;

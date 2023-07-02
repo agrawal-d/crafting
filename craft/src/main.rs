@@ -23,7 +23,7 @@ fn init_logging() -> EmpResult {
 
     CombinedLogger::init(vec![
         TermLogger::new(
-            LevelFilter::Trace,
+            LevelFilter::Info,
             Config::default(),
             TerminalMode::Mixed,
             ColorChoice::Auto,

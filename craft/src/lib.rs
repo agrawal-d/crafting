@@ -9,7 +9,7 @@ pub mod scanner;
 pub mod token;
 pub mod token_type;
 
-use interpreter::evaluate;
+use interpreter::Interpreter;
 use log::*;
 use parser::Parser;
 use scanner::Scanner;
@@ -19,8 +19,6 @@ use std::{
     fs::{self},
     path::PathBuf,
 };
-
-use crate::ast_printer::print_expr;
 
 pub type EmpResult = Result<(), Box<dyn std::error::Error>>;
 pub type Eer = Result<(), ()>;
@@ -65,15 +63,17 @@ pub fn run(source: &str) -> EmpResult {
     let tokens = scanner.scan_tokens();
 
     for token in &tokens {
-        println!("{token}");
+        debug!("{token}");
     }
 
     let mut parser = Parser::new(tokens);
-    let expr = parser
-        .parse()
-        .map_err(|()| Box::<dyn std::error::Error>::from("Error during parsing"))?;
-    println!("Parsed expression: {}", print_expr(expr.clone()));
-    let value = evaluate(expr);
-    println!("Evaluated value of expression: {:?}", value);
+    let stmts = parser.parse();
+
+    if HAD_ERROR.load(Ordering::SeqCst) {
+        return Err("Error while parsing".into());
+    }
+
+    Interpreter::interpret(stmts);
+
     Ok(())
 }

@@ -1,3 +1,5 @@
+use log::debug;
+
 use crate::error;
 use crate::token::Token;
 use crate::token_type::TokenType;
@@ -53,7 +55,7 @@ impl Scanner {
         }
 
         self.tokens
-            .push(Token::new(TokenType::EOF, "".to_string(), self.line));
+            .push(Token::new(TokenType::EOF, "~EOF".to_string(), self.line));
 
         self.tokens.clone()
     }
@@ -173,7 +175,7 @@ impl Scanner {
             self.advance();
         }
 
-        println!("peek: {}", self.peek());
+        debug!("peek: {}", self.peek());
 
         if self.is_at_end() || self.peek() != '"' {
             error(self.line, "Unterminated string literal");
