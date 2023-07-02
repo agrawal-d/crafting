@@ -125,7 +125,7 @@ impl Scanner {
 
         if let Some(c) = value {
             self.current += 1;
-            return c;
+            c
         } else {
             panic!(
                 "Currenly at {} (char {}), length is {}, tried to advance",

@@ -1,4 +1,3 @@
-use crate::ast_printer::print_expr;
 use crate::token::{Token, TokenType};
 use crate::{ast::*, Eer};
 
@@ -82,7 +81,7 @@ impl Parser {
             return Expr::Unary(Box::new(Unary::new(operator, right)));
         }
 
-        return self.primary();
+        self.primary()
     }
 
     fn primary(&mut self) -> Expr {
@@ -185,15 +184,15 @@ impl Parser {
     }
 
     fn is_at_end(&self) -> bool {
-        return self.current >= self.tokens.len();
+        self.current >= self.tokens.len()
     }
 
     fn peek(&self) -> &Token {
-        return &self.tokens[self.current];
+        &self.tokens[self.current]
     }
 
     fn previous(&self) -> &Token {
-        return &self.tokens[self.current - 1];
+        &self.tokens[self.current - 1]
     }
 
     fn advance(&mut self) {

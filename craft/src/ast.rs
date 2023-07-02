@@ -8,7 +8,7 @@ use crate::token::Token;
 macro_rules! generate_node {
     ($name:ident, $($field:ident : $type:ty),*) => {
 
-        #[derive(Debug)]
+        #[derive(Debug, Clone)]
         pub struct $name {
             $(pub $field: $type),*
         }
@@ -23,7 +23,7 @@ macro_rules! generate_node {
     };
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Expr {
     Binary(Box<Binary>),
     Grouping(Box<Grouping>),
@@ -31,7 +31,7 @@ pub enum Expr {
     Unary(Box<Unary>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Object {
     Number(f64),
     String(String),

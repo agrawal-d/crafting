@@ -3,11 +3,13 @@ extern crate lazy_static;
 
 pub mod ast;
 pub mod ast_printer;
+pub mod interpreter;
 pub mod parser;
 pub mod scanner;
 pub mod token;
 pub mod token_type;
 
+use interpreter::evaluate;
 use log::*;
 use parser::Parser;
 use scanner::Scanner;
@@ -70,7 +72,8 @@ pub fn run(source: &str) -> EmpResult {
     let expr = parser
         .parse()
         .map_err(|()| Box::<dyn std::error::Error>::from("Error during parsing"))?;
-    println!("{}", print_expr(expr));
-
+    println!("Parsed expression: {}", print_expr(expr.clone()));
+    let value = evaluate(expr);
+    println!("Evaluated value of expression: {:?}", value);
     Ok(())
 }
